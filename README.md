@@ -23,3 +23,5 @@ This repository contains a Playwright automation test suite created as part of m
 npm install
 npx playwright install
 npx playwright test
+
+When instructed to, paste verification code sent to the email, into verification-code.txt and save the file. This text is then deleted once its been used to create an account.
