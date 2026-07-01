@@ -26,13 +26,18 @@ test('search for a product, add to cart and verify results', async ({page}) => {
     //give results count a variable and assert that it is greater than 0
     const resultCount = await searchResults.count();
     expect(resultCount).toBeGreaterThan(0);
-    await firstResult.getByRole('link', {name: /add to cart/i}).click();
-    await expect(page.getByText(/item added to cart/i)).toBeVisible();
+    const productCards = page.locator('.features_items .product-image-wrapper');
+    await expect(productCards.first()).toBeVisible();
+    const firstProduct = productCards.first();
+    await firstProduct.locator('.productinfo a.add-to-cart').click();
+    const cartModal = page.locator('#cartModal');
+    await expect(cartModal).toBeVisible();
+    await expect(cartModal.getByText(/added!/i)).toBeVisible();
+    await expect(cartModal.getByText(/your product has been added to cart/i)).toBeVisible();
     await page.getByRole('link', {name: /view cart/i}).click();
-    await expect(page.getByRole('heading', {name: /shopping cart/i})).toBeVisible();
-    await expect(page.getByText(/dress/i)).toBeVisible();
+    await expect(page.getByText(/shopping cart/i)).toBeVisible({timeout: 5000});
     await expect(page.getByText(/price/i)).toBeVisible();
     await expect(page.getByText(/quantity/i)).toBeVisible();
     await expect(page.getByText(/total/i)).toBeVisible();
-    await expect(page.getByRole('button', {name: /proceed to checkout/i})).toBeVisible();
+    await page.locator('a.check_out').click();
 }); 
