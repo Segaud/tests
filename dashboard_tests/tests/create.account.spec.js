@@ -38,7 +38,7 @@ async function waitForVerificationCode(filePath, timeoutMs = 180000, pollMs = 10
   throw new Error('Timed out waiting for verification code in file');
 }
 
-test.only('create new UK test account', async ({page}) => {
+test('create new UK test account', async ({page}) => {
     test.setTimeout(180000);
     await page.goto('https://dashboard-staging.ilivestock.co.uk/registration');
     await expect(page.getByRole('heading', {name: /Create an iLivestock account/i})).toBeVisible();
