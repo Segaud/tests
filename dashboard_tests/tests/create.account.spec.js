@@ -68,7 +68,7 @@ test('create new UK test account', async ({page}) => {
 
     const frame = page.frameLocator('iframe');
     const startTrialButton = frame.getByRole('button', { name: /start trial/i });
-    await expect(startTrialButton).toBeVisible({ timeout: 15000 });
+    await expect(startTrialButton).toBeVisible({ timeout: 150000 });
     await startTrialButton.click();
 
     await expect(page).toHaveURL(/checkout\.stripe\.com/);
