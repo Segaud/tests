@@ -1,6 +1,7 @@
 package com.example;
 
 import java.time.Duration;
+import java.util.NoSuchElementException;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -13,6 +14,8 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.FluentWait;
+import org.openqa.selenium.support.ui.Wait;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 public class SetUpTest {
@@ -48,6 +51,24 @@ public class SetUpTest {
         wait.until(ExpectedConditions.presenceOfElementLocated(result));
 
         Assertions.assertTrue(driver.getTitle().toLowerCase().contains("selenium"), "Should contain Selenium");
+    }
+
+    @Test
+    void fluentWaitDemo() {
+        driver.get("https://www.duckduckgo.com/");
+        driver.findElement(By.name("q")).sendKeys("selenium");
+        driver.findElement(By.name("q")).sendKeys(Keys.ENTER);
+
+        By resultTitles = By.cssSelector("[data-test-id='result'], h2 a, #links .result_title a");
+
+        Wait<WebDriver> fluentWait = new FluentWait<>(driver)
+                .withTimeout(Duration.ofSeconds(10))
+                .pollingEvery(Duration.ofMillis(250))
+                .ignoring(NoSuchElementException.class); // skips the exception because empty is allowed.
+
+        fluentWait.until(d -> d.findElements(resultTitles).size() >= 5);
+
+        Assertions.assertTrue(driver.findElements(resultTitles).size() >= 5, "Should have at least 5");
     }
 
 
