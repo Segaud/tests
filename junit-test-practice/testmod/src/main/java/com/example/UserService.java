@@ -21,7 +21,7 @@ public class UserService {
         }
 
         if (repo.existsByEmail(email))
-            throw new IllegalArgumentException("Email already registered");
+            throw new IllegalStateException("Email already registered");
 
         User user = new User(email);
         repo.save(user);

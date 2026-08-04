@@ -63,9 +63,9 @@ public class UserServiceTest {
         UserRepository repo = mock(UserRepository.class);
         UserService sut = new UserService(repo);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> sut.register("invalid-email"));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> sut.register("Invalid-email"));
 
-        assertEquals("invalid email", exception.getMessage());
+        assertEquals("Invalid email", exception.getMessage());
         verifyNoMoreInteractions(repo);
     }
 
@@ -77,7 +77,7 @@ public class UserServiceTest {
         UserService sut = new UserService(repo);
         IllegalStateException exception = assertThrows(IllegalStateException.class, () -> sut.register("duplicate@x.com"));
 
-        assertEquals("duplicate email", exception.getMessage());
+        assertEquals("Email already registered", exception.getMessage());
         verify(repo).existsByEmail(anyString());
         verifyNoMoreInteractions(repo);
     }
