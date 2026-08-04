@@ -2,9 +2,13 @@ package com.example;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import static org.mockito.ArgumentMatchers.anyString;
+import org.mockito.InOrder;
+import org.mockito.Mockito;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -25,10 +29,10 @@ public class UserServiceTest {
     // @Mock
     // UserRepository userRepository;
 
-    // flow: stub= email not registered.
+    // flow: stub = email not registered.
     // call register and verify that save was called.
     @Test
-    void register_saves_new_user_and_returns_it(){
+    void register_saves_new_user_and_returns_it() {
         // arrange
         UserRepository repo = mock(UserRepository.class);
         when(repo.existsByEmail("a@a.com")).thenReturn(false);
@@ -42,8 +46,8 @@ public class UserServiceTest {
         verify(repo).existsByEmail("a@a.com");
         verify(repo).save(result);
 
-        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);;
-        verify(repo, times(1)).save(userCaptor.capture()); 
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(repo, times(1)).save(userCaptor.capture());
 
         assertEquals("a@a.com", userCaptor.getValue().getEmail());
 
@@ -53,5 +57,48 @@ public class UserServiceTest {
         // check no other unintended calls are made.
         verifyNoMoreInteractions(repo);
     }
-    
+
+    @Test
+    void invalid_email_is_rejected() {
+        UserRepository repo = mock(UserRepository.class);
+        UserService sut = new UserService(repo);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> sut.register("invalid-email"));
+
+        assertEquals("invalid email", exception.getMessage());
+        verifyNoMoreInteractions(repo);
+    }
+
+    @Test
+    void duplicate_email_is_rejected() {
+        UserRepository repo = mock(UserRepository.class);
+        when(repo.existsByEmail("duplicate@x.com")).thenReturn(true);
+
+        UserService sut = new UserService(repo);
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> sut.register("duplicate@x.com"));
+
+        assertEquals("duplicate email", exception.getMessage());
+        verify(repo).existsByEmail(anyString());
+        verifyNoMoreInteractions(repo);
+    }
+
+    @Test
+    void register_saves_then_returns_user_in_order() {
+        UserRepository repo = mock(UserRepository.class);
+        when(repo.existsByEmail("a@a.com")).thenReturn(false);
+
+        UserService sut = new UserService(repo);
+
+        User result = sut.register("a@a.com");
+
+        assertNotNull(result);
+        assertEquals("a@a.com", result.getEmail());
+
+        InOrder inOrder = Mockito.inOrder(repo);
+
+        inOrder.verify(repo).existsByEmail("a@a.com");
+        inOrder.verify(repo).save(result);
+
+        verifyNoMoreInteractions(repo);
+    }
 }
