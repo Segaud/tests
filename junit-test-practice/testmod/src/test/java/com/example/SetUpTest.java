@@ -17,6 +17,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -26,6 +27,7 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.Wait;
 import org.openqa.selenium.support.ui.WebDriverWait;
+
 
 public class SetUpTest {
     
@@ -81,6 +83,42 @@ public class SetUpTest {
         }
     }
 
+    private void acceptCookiesIfDisplayed() {
+        WebDriverWait cookiesWait = new WebDriverWait(driver, Duration.ofSeconds(5));
+
+        try {
+        By acceptAllButton = By.xpath(
+            "//*[@id='L2AGLb'] | " +
+            "//button[.//*[normalize-space()='Accept all']] | " +
+            "//*[@role='button'][normalize-space()='Accept all']"
+        );
+
+        cookiesWait.until(
+            ExpectedConditions.elementToBeClickable(acceptAllButton)
+        ).click();
+
+    } catch (TimeoutException ignored) {
+        // The cookies may already have been accepted,
+        // or the banner may not have appeared.
+    }
+    }
+
+    private Path takeScreenshot(String screenshotName) throws IOException {
+        Path dir = Paths.get("target", "screenshots");
+        Files.createDirectories(dir);
+
+        String ts = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmSS"));
+        
+        Path file = dir.resolve(screenshotName + "_" + ts + ".png");
+
+        byte[] png = ((TakesScreenshot)driver).getScreenshotAs(OutputType.BYTES);
+
+        Files.write(file, png);
+
+        return file;
+
+    }
+
     @BeforeEach
     void setUp() {
         ChromeOptions opts = new ChromeOptions();
@@ -130,12 +168,17 @@ public class SetUpTest {
     }
 
     @Test
-    void googleKittens() {
-        driver.get("https://google.com/");
+    void searchKittens() {
+        driver.get("https://duckduckgo.com/");
+
+        acceptCookiesIfDisplayed();
+
         driver.findElement(By.name("q")).sendKeys("kittens");
         driver.findElement(By.name("q")).sendKeys(Keys.ENTER);
 
         By resultTitles = By.cssSelector("[data-test-id='result'], h2 a, #links .result_title a");
+
+        wait.until(ExpectedConditions.presenceOfElementLocated(resultTitles));
 
         Wait<WebDriver> fluentWait = new FluentWait<>(driver)
                 .withTimeout(Duration.ofSeconds(10))
@@ -143,6 +186,8 @@ public class SetUpTest {
                 .ignoring(NoSuchElementException.class); // skips the exception because empty is allowed.
 
         fluentWait.until(d -> d.findElements(resultTitles).size() >= 5);
+
+        Assertions.assertTrue(driver.getTitle().toLowerCase().contains("kittens"), "Should contain kittens");
     }
 
     @Test
@@ -261,6 +306,50 @@ public class SetUpTest {
             .awaitLoaded();
 
         Assertions.assertTrue(results.resultCount() > 0, "Should have at least 5 results");
+    }
+
+    @Test
+    void exercise2() throws IOException {
+        driver.get("https://automatetheboringstuff.com");
+
+        WebElement c1 = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("a[href*='chapter1.html']")));
+
+        String mainUrl = driver.getCurrentUrl();
+
+        new Actions(driver)
+        .scrollToElement(c1)
+        .scrollByAmount(0, 400)
+        .perform();
+
+        // takeScreenshot("c1_wont_click");
+
+        c1.click();
+
+        wait.until(ExpectedConditions.urlContains("chapter1"));
+
+        driver.navigate().back();
+        wait.until(ExpectedConditions.urlToBe(mainUrl));
+
+        WebElement c2 = wait.until(ExpectedConditions.elementToBeClickable(By.partialLinkText("Chapter 2")));
+
+        c2.click();
+
+        wait.until(ExpectedConditions.urlContains("chapter2"));
+
+        driver.navigate().back();
+        wait.until(ExpectedConditions.urlToBe(mainUrl));
+
+        WebElement c3 = wait.until(ExpectedConditions.elementToBeClickable(By.partialLinkText("Chapter 3")));
+
+
+        c3.click();
+
+        wait.until(ExpectedConditions.urlContains("chapter3"));
+
+        driver.navigate().back();
+        wait.until(ExpectedConditions.urlToBe(mainUrl));
+
+
     }
 
 }
